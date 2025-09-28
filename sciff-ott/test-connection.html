@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SCIFF OTT - Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>SCIFF OTT Platform - Connection Test</h1>
+    <div id="status">Testing connection...</div>
+    <div id="results"></div>
+    
+    <script>
+        // Get environment variables (you'll need to replace these with your actual values)
+        const SUPABASE_URL = 'https://lrwbhdweuaitccgoikbf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxyd2JoZHdldWFpdGNjZ29pa2JmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNTA1NDIsImV4cCI6MjA3NDYyNjU0Mn0.6WIV0mW9oIa8zQOBXwTQpOW3h0OET0Cp_u0XRM_jnpk';
+        
+        // Initialize Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        async function testConnection() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Test 1: Basic connection
+                statusDiv.innerHTML = '🔄 Testing Supabase connection...';
+                
+                // Test 2: Check if tables exist
+                const { data: schools, error: schoolsError } = await supabase
+                    .from('schools')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (schoolsError) {
+                    throw new Error(`Schools table error: ${schoolsError.message}`);
+                }
+                
+                // Test 3: Check categories
+                const { data: categories, error: categoriesError } = await supabase
+                    .from('categories')
+                    .select('*');
+                
+                if (categoriesError) {
+                    throw new Error(`Categories error: ${categoriesError.message}`);
+                }
+                
+                // Test 4: Check admin user
+                const { data: users, error: usersError } = await supabase
+                    .from('users')
+                    .select('*, school:schools(*)')
+                    .eq('role', 'admin');
+                
+                if (usersError) {
+                    throw new Error(`Users error: ${usersError.message}`);
+                }
+                
+                // Test 5: Try login
+                statusDiv.innerHTML = '🔄 Testing admin login...';
+                
+                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                    email: 'praveend@lxl.in',
+                    password: 'Apple@123'
+                });
+                
+                if (authError) {
+                    throw new Error(`Auth error: ${authError.message}`);
+                }
+                
+                // Test 6: Get user profile after login
+                if (authData.user) {
+                    const { data: userProfile, error: profileError } = await supabase
+                        .from('users')
+                        .select('*, school:schools(*)')
+                        .eq('id', authData.user.id)
+                        .eq('is_active', true)
+                        .single();
+                    
+                    if (profileError) {
+                        throw new Error(`Profile error: ${profileError.message}`);
+                    }
+                    
+                    statusDiv.innerHTML = '✅ All tests passed!';
+                    resultsDiv.innerHTML = `
+                        <h3>✅ Connection Test Results:</h3>
+                        <p><strong>Supabase URL:</strong> ${SUPABASE_URL}</p>
+                        <p><strong>Categories found:</strong> ${categories.length}</p>
+                        <p><strong>Admin users found:</strong> ${users.length}</p>
+                        <p><strong>Auth user ID:</strong> ${authData.user.id}</p>
+                        <p><strong>User profile:</strong> ${userProfile.username} (${userProfile.role})</p>
+                        <p><strong>School:</strong> ${userProfile.school.name}</p>
+                        <p><strong>Status:</strong> Login should work in the main app!</p>
+                    `;
+                    
+                    // Sign out
+                    await supabase.auth.signOut();
+                } else {
+                    throw new Error('No auth user returned');
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Test failed!';
+                resultsDiv.innerHTML = `
+                    <h3>❌ Error Details:</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Possible solutions:</strong></p>
+                    <ul>
+                        <li>Run the complete-setup.sql script in Supabase</li>
+                        <li>Check if admin user exists in Supabase auth</li>
+                        <li>Verify environment variables in .env.local</li>
+                    </ul>
+                `;
+                console.error('Connection test error:', error);
+            }
+        }
+        
+        // Run test when page loads
+        testConnection();
+    </script>
+</body>
+</html>
