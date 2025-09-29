@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Volume2, VolumeX, Maximize, Minimize, Play, Pause } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import type { User, Film, ViewingLog } from '../lib/supabase';
+import type { User, Film } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 
 interface VideoPlayerProps {
@@ -11,7 +11,7 @@ interface VideoPlayerProps {
   onLogout: () => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ user, onLogout }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ user }) => {
   const { filmId } = useParams<{ filmId: string }>();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,7 +31,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ user, onLogout }) => {
   const [buffering, setBuffering] = useState(false);
   const [isGumletEmbed, setIsGumletEmbed] = useState(false);
   
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Function to check if URL is a Gumlet embed link
   const isGumletUrl = (url: string): boolean => {
@@ -292,42 +292,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ user, onLogout }) => {
       toast.error('Video element not found');
       return;
     }
-    
-    setBuffering(true);
-    
-    // Try to play the video
-    const playPromise = videoRef.current.play();
-    
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setIsPlaying(true);
-          setBuffering(false);
-        })
-        .catch(error => {
-          console.error('Playback failed:', error);
-          const errorMessage = error.message || 'Failed to play video';
-          
-          // Try to handle different error types
-          if (errorMessage.includes('interact') || errorMessage.includes('user')) {
-            // User interaction required, show a play button
-            setError('Click the play button to start the video');
-            toast.error('Please click the play button to start the video');
-          } else {
-            setError(`Playback Error: ${errorMessage}`);
-            toast.error(`Playback Error: ${errorMessage}`);
-          }
-          setBuffering(false);
-        });
-    } else {
-      // Older browsers might not return a promise
-      setIsPlaying(true);
-      setBuffering(false);
-    }
-  };
-  
-  const playVideo = () => {
-    if (!videoRef.current) return;
     
     setBuffering(true);
     
