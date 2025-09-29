@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { 
-  LogOut, Play, Clock, Users, Shield, Settings, Info, 
-  Plus, ChevronLeft, ChevronRight, 
-  Star, ThumbsUp, ChevronDown, Search, Bell
+  Play, Users, Shield, Settings, Info, 
+  ChevronLeft, ChevronRight, 
+  Search, Bell
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { User, Category, SchoolSubscription, Banner } from '../lib/supabase';
@@ -143,10 +143,6 @@ const HomePage: React.FC<HomePageProps> = ({ user, onLogout }) => {
 
   const hasSubscriptionForCategory = (categoryId: string): boolean => {
     return subscriptions.some(sub => sub.category_id === categoryId);
-  };
-
-  const getSubscriptionForCategory = (categoryId: string): SchoolSubscription | undefined => {
-    return subscriptions.find(sub => sub.category_id === categoryId);
   };
 
   const handlePlayFilm = (filmId: string, categoryId: string) => {

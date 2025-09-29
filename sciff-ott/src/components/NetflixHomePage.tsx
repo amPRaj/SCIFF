@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { 
-  LogOut, Play, Clock, Users, Shield, Settings, Info, 
+  Play, Users, Shield, Settings, Info, 
   Plus, ChevronLeft, ChevronRight, 
   Star, ThumbsUp, ChevronDown, Search, Bell
 } from 'lucide-react';

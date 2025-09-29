@@ -177,7 +177,6 @@ const demoBanners: Banner[] = [
 
 export class DemoAuthService {
   private currentUser: User | null = null;
-  private sessionKey: string | null = null;
 
   constructor() {
     this.sessionKey = this.generateSessionKey();

@@ -507,7 +507,7 @@ export const SubscriptionsTab: React.FC<TabProps> = ({ subscriptions, schools, c
 };
 
 // Analytics Tab Component
-export const AnalyticsTab: React.FC<TabProps> = ({ viewingLogs, loginActivity, films, schools }) => {
+export const AnalyticsTab: React.FC<Omit<TabProps, 'films' | 'schools'>> = ({ viewingLogs, loginActivity }) => {
   const getTopFilms = () => {
     const filmViews = viewingLogs.reduce((acc, log) => {
       const title = log.film?.title || 'Unknown';
@@ -718,7 +718,7 @@ export const AnalyticsTab: React.FC<TabProps> = ({ viewingLogs, loginActivity, f
 };
 
 // Security Tab Component
-export const SecurityTab: React.FC<TabProps> = ({ loginActivity, viewingLogs }) => {
+export const SecurityTab: React.FC<Omit<TabProps, 'viewingLogs'>> = ({ loginActivity }) => {
   const getSecurityStats = () => {
     const today = new Date().toDateString();
     const activeSessions = loginActivity.filter(la => la.logged_out_at === null);

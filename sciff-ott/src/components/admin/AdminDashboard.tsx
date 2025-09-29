@@ -1,5 +1,4 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
 import type { User } from '../../lib/supabase';
 
 interface AdminDashboardProps {

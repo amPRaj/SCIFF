@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { User, LoginActivity } from './supabase';
+import type { User } from './supabase';
 
 export interface LoginCredentials {
   email: string;
