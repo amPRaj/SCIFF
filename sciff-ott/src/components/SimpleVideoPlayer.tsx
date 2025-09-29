@@ -8,10 +8,9 @@ import LoadingSpinner from './LoadingSpinner';
 
 interface SimpleVideoPlayerProps {
   user: User;
-  onLogout: () => void;
 }
 
-const SimpleVideoPlayer: React.FC<SimpleVideoPlayerProps> = ({ user, onLogout }) => {
+const SimpleVideoPlayer: React.FC<SimpleVideoPlayerProps> = ({ user }) => {
   const { filmId } = useParams<{ filmId: string }>();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);

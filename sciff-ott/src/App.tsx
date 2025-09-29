@@ -8,7 +8,6 @@ import type { User } from './lib/supabase';
 // Components
 import LoginPage from './components/LoginPage';
 import HomePage from './components/HomePage';
-import VideoPlayer from './components/VideoPlayer';
 import SimpleVideoPlayer from './components/SimpleVideoPlayer';
 import AdminDashboard from './components/ComprehensiveAdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -249,7 +248,7 @@ function App() {
             path="/watch/:filmId" 
             element={
               <ProtectedRoute user={user}>
-                <SimpleVideoPlayer user={user} onLogout={handleLogout} />
+                <SimpleVideoPlayer user={user} />
               </ProtectedRoute>
             } 
           />
