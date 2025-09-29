@@ -527,14 +527,15 @@ class AuthService {
     `;
     
     const now = new Date();
-    watermark.textContent = `SCIFF | ${userInfo.schoolId.slice(-8)} | ${now.toLocaleString()}`;
+    const schoolIdDisplay = userInfo.schoolId ? userInfo.schoolId.slice(-8) : 'ADMIN';
+    watermark.textContent = `SCIFF | ${schoolIdDisplay} | ${now.toLocaleString()}`;
     
     document.body.appendChild(watermark);
 
     // Update timestamp every minute
     setInterval(() => {
       const now = new Date();
-      watermark.textContent = `SCIFF | ${userInfo.schoolId.slice(-8)} | ${now.toLocaleString()}`;
+      watermark.textContent = `SCIFF | ${schoolIdDisplay} | ${now.toLocaleString()}`;
     }, 60000);
   }
 }

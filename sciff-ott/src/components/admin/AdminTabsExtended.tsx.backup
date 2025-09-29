@@ -411,7 +411,6 @@ export const SubscriptionsTab: React.FC<TabProps> = ({ subscriptions, schools, c
                   </tr>
                 );
               })
-            }
             </tbody>
           </table>
         </div>

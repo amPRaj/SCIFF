@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { authService } from './lib/auth';
 import { demoAuthService } from './lib/demoAuth';
@@ -7,13 +7,37 @@ import type { User } from './lib/supabase';
 
 // Components
 import LoginPage from './components/LoginPage';
-import NetflixHomePage from './components/NetflixHomePage';
+import HomePage from './components/HomePage';
 import VideoPlayer from './components/VideoPlayer';
+import SimpleVideoPlayer from './components/SimpleVideoPlayer';
 import AdminDashboard from './components/ComprehensiveAdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoadingSpinner from './components/LoadingSpinner';
 import DemoPage from './components/DemoPage';
 import DebugLogin from './components/DebugLogin';
+import VideoTest from './components/VideoTest';
+import TestLogin from './components/TestLogin';
+import VideoPlaybackTest from './components/VideoPlaybackTest';
+
+// Role-based redirect component
+const RoleBasedRedirect: React.FC<{ user: User }> = ({ user }) => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Redirect based on user role after login
+    if (user.role === 'admin') {
+      navigate('/admin', { replace: true });
+    } else {
+      navigate('/home', { replace: true });
+    }
+  }, [user, navigate]);
+  
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <LoadingSpinner size="large" />
+    </div>
+  );
+};
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -52,7 +76,7 @@ function App() {
         } catch (error) {
           console.error('Keep alive error:', error);
         }
-      }, 120000); // 2 minutes
+      }, 1200000); // 12 minutes
 
       // Listen for user activity to refresh session
       const handleUserActivity = () => {
@@ -80,10 +104,7 @@ function App() {
     try {
       const currentUser = await currentAuthService.getCurrentUser();
       if (currentUser) {
-        if (isDemoMode) {
-          setUser(currentUser);
-          setIsSessionValid(true);
-        } else {
+        if (currentUser) {
           const sessionValid = await authService.checkSessionValidity();
           if (sessionValid) {
             setUser(currentUser);
@@ -94,10 +115,12 @@ function App() {
         }
         
         // Enable watermark for authenticated users
-        currentAuthService.enableWatermark({
-          schoolId: currentUser.school_id,
-          userId: currentUser.id
-        });
+        if (currentUser) {
+          currentAuthService.enableWatermark({
+            schoolId: currentUser.school_id || 'admin',
+            userId: currentUser.id
+          });
+        }
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
@@ -111,10 +134,12 @@ function App() {
     setIsSessionValid(true);
     
     // Enable watermark
-    currentAuthService.enableWatermark({
-      schoolId: loggedInUser.school_id,
-      userId: loggedInUser.id
-    });
+    if (loggedInUser) {
+      currentAuthService.enableWatermark({
+        schoolId: loggedInUser.school_id || 'admin',
+        userId: loggedInUser.id
+      });
+    }
   };
 
   const handleLogout = async () => {
@@ -191,26 +216,45 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-900 no-select">
         <Routes>
+          {/* Root path - role-based redirect */}
           <Route 
             path="/" 
+            element={<RoleBasedRedirect user={user} />}
+          />
+          
+          {/* Test login page */}
+          <Route 
+            path="/test-login" 
+            element={<TestLogin />}
+          />
+          
+          {/* Video playback test page */}
+          <Route 
+            path="/video-playback-test" 
+            element={<VideoPlaybackTest />}
+          />
+          
+          {/* Home page for regular users */}
+          <Route 
+            path="/home" 
             element={
               <ProtectedRoute user={user}>
-                {user.role === 'admin' ? (
-                  <Navigate to="/admin" replace />
-                ) : (
-                  <NetflixHomePage user={user} onLogout={handleLogout} />
-                )}
+                <HomePage user={user} onLogout={handleLogout} />
               </ProtectedRoute>
             } 
           />
+          
+          {/* Video player for all authenticated users */}
           <Route 
             path="/watch/:filmId" 
             element={
               <ProtectedRoute user={user}>
-                <VideoPlayer user={user} onLogout={handleLogout} />
+                <SimpleVideoPlayer user={user} onLogout={handleLogout} />
               </ProtectedRoute>
             } 
           />
+          
+          {/* Admin dashboard - admin only */}
           <Route 
             path="/admin" 
             element={
@@ -219,6 +263,18 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
+          {/* Video test page - for debugging */}
+          <Route 
+            path="/video-test" 
+            element={
+              <ProtectedRoute user={user}>
+                <VideoTest />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Fallback - redirect to role-appropriate page */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

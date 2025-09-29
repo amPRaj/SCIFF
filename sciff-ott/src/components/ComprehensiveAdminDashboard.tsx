@@ -28,7 +28,12 @@ import {
   X,
   CheckCircle,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  Menu,
+  Home,
+  LogOut,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import type { User } from '../lib/supabase';
 import { SchoolsTab, CategoriesTab, FilmsTab } from './admin/AdminTabs';
@@ -152,6 +157,7 @@ interface LoginActivity {
 
 const ComprehensiveAdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [films, setFilms] = useState<Film[]>([]);
@@ -221,6 +227,32 @@ const ComprehensiveAdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLo
     }
   };
 
+  // Enhanced helper function to group subscriptions by school
+  const getSchoolSubscriptions = () => {
+    const schoolSubs = subscriptions.reduce((acc, sub) => {
+      const schoolName = sub.school?.name || 'Unknown School';
+      if (!acc[schoolName]) {
+        acc[schoolName] = {
+          school: sub.school,
+          categories: [],
+          totalSubscriptions: 0,
+          activeSubscriptions: 0
+        };
+      }
+      acc[schoolName].categories.push(sub.category?.name || 'Unknown Category');
+      acc[schoolName].totalSubscriptions++;
+      if (sub.active && new Date(sub.expiry_date) > new Date()) {
+        acc[schoolName].activeSubscriptions++;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    return Object.entries(schoolSubs).map(([schoolName, data]) => ({
+      schoolName,
+      ...data
+    }));
+  };
+
   // Helper functions
   const getTopFilms = () => {
     const filmViews = viewingLogs.reduce((acc, log) => {
@@ -258,30 +290,6 @@ const ComprehensiveAdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLo
       .slice(0, 5);
   };
 
-  const TabButton: React.FC<{ 
-    id: string; 
-    label: string; 
-    icon: React.ReactNode; 
-    count?: number 
-  }> = ({ id, label, icon, count }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-        activeTab === id
-          ? 'bg-blue-600 text-white'
-          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-      }`}
-    >
-      {icon}
-      <span className="ml-2">{label}</span>
-      {count !== undefined && (
-        <span className="ml-2 px-2 py-1 text-xs bg-gray-500 rounded-full">
-          {count}
-        </span>
-      )}
-    </button>
-  );
-
   const Modal: React.FC<{
     title: string;
     children: React.ReactNode;
@@ -302,126 +310,133 @@ const ComprehensiveAdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLo
 
   const OverviewTab = () => (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-600 rounded-full">
-              <School className="w-6 h-6 text-white" />
+      {/* Enhanced Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Total Schools</p>
+              <p className="text-white text-3xl font-bold">{schools.length}</p>
+              <p className="text-blue-200 text-xs mt-1">{schools.filter(s => s.is_active).length} active</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-400">Total Schools</p>
-              <p className="text-2xl font-bold text-white">{schools.length}</p>
-              <p className="text-xs text-gray-500">{schools.filter(s => s.is_active).length} active</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-600 rounded-full">
-              <Film className="w-6 h-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-400">Total Films</p>
-              <p className="text-2xl font-bold text-white">{films.length}</p>
-              <p className="text-xs text-gray-500">{films.filter(f => f.is_active).length} active</p>
+            <div className="p-3 bg-blue-500/30 rounded-lg">
+              <School className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-600 rounded-full">
-              <Users className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-green-600 to-green-700 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-100 text-sm font-medium">Total Films</p>
+              <p className="text-white text-3xl font-bold">{films.length}</p>
+              <p className="text-green-200 text-xs mt-1">{films.filter(f => f.is_active).length} active</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-400">Active Subscriptions</p>
-              <p className="text-2xl font-bold text-white">
+            <div className="p-3 bg-green-500/30 rounded-lg">
+              <Film className="w-8 h-8 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-600 to-purple-700 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-sm font-medium">Active Subscriptions</p>
+              <p className="text-white text-3xl font-bold">
                 {subscriptions.filter(s => s.active && new Date(s.expiry_date) > new Date()).length}
               </p>
-              <p className="text-xs text-gray-500">{subscriptions.length} total</p>
+              <p className="text-purple-200 text-xs mt-1">{subscriptions.length} total</p>
+            </div>
+            <div className="p-3 bg-purple-500/30 rounded-lg">
+              <Users className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
-          <div className="flex items-center">
-            <div className="p-3 bg-orange-600 rounded-full">
-              <PlayCircle className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-br from-orange-600 to-orange-700 p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-sm font-medium">Total Views</p>
+              <p className="text-white text-3xl font-bold">{viewingLogs.length}</p>
+              <p className="text-orange-200 text-xs mt-1">This month</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm text-gray-400">Total Views</p>
-              <p className="text-2xl font-bold text-white">
-                {viewingLogs.length}
-              </p>
-              <p className="text-xs text-gray-500">This month</p>
+            <div className="p-3 bg-orange-500/30 rounded-lg">
+              <PlayCircle className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Analytics */}
+      {/* Enhanced School Subscriptions Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2" />
+            <School className="w-5 h-5 mr-2 text-blue-400" />
+            School Subscription Summary
+          </h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto admin-scrollbar">
+            {getSchoolSubscriptions().map((schoolData, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                  <div>
+                    <p className="text-white font-medium">{schoolData.schoolName}</p>
+                    <p className="text-xs text-gray-400">
+                      Categories: {schoolData.categories.join(', ')}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-blue-400 font-medium">{schoolData.activeSubscriptions}</span>
+                  <span className="text-gray-400">/{schoolData.totalSubscriptions}</span>
+                </div>
+              </div>
+            ))}
+            {getSchoolSubscriptions().length === 0 && (
+              <p className="text-gray-400 text-center py-4">No school subscriptions found</p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2 text-green-400" />
             Top Viewed Films
           </h3>
           <div className="space-y-3">
             {getTopFilms().map((item, index) => (
-              <div key={item.film_title} className="flex items-center justify-between">
+              <div key={item.film_title} className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
                 <div className="flex items-center">
-                  <span className="text-xs bg-gray-700 px-2 py-1 rounded mr-3">{index + 1}</span>
-                  <span className="text-white">{item.film_title}</span>
+                  <span className="text-xs bg-gray-600 px-2 py-1 rounded mr-3 text-gray-300">{index + 1}</span>
+                  <span className="text-white font-medium">{item.film_title}</span>
                 </div>
                 <span className="text-blue-400 font-medium">{item.views} views</span>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <Activity className="w-5 h-5 mr-2" />
-            Recent Activity
-          </h3>
-          <div className="space-y-3">
-            {viewingLogs.slice(0, 5).map((log) => (
-              <div key={log.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                <div className="flex items-center">
-                  <PlayCircle className="w-4 h-4 text-green-400 mr-3" />
-                  <div>
-                    <p className="text-white text-sm">{log.film?.title}</p>
-                    <p className="text-xs text-gray-400">{log.school?.name}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-gray-400">
-                  {new Date(log.started_at).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
+            {getTopFilms().length === 0 && (
+              <p className="text-gray-400 text-center py-4">No viewing data available</p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Expiring Subscriptions Alert */}
-      <div className="card p-6">
+      <div className="bg-yellow-900/20 border border-yellow-800 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
           <AlertCircle className="w-5 h-5 mr-2 text-yellow-400" />
-          Expiring Subscriptions
+          Expiring Subscriptions (Next 7 Days)
         </h3>
         <div className="space-y-3">
           {getExpiringSubscriptions().map((sub) => (
-            <div key={sub.id} className="flex items-center justify-between p-3 bg-yellow-900/20 border border-yellow-800 rounded-lg">
+            <div key={sub.id} className="flex items-center justify-between p-3 bg-yellow-900/30 rounded-lg">
               <div className="flex items-center">
                 <Clock className="w-4 h-4 text-yellow-400 mr-3" />
                 <div>
                   <p className="text-white font-medium">{sub.school?.name}</p>
-                  <p className="text-sm text-gray-400">{sub.category?.name} - Expires {new Date(sub.expiry_date).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-300">{sub.category?.name} - Expires {new Date(sub.expiry_date).toLocaleDateString()}</p>
                 </div>
               </div>
-              <span className="px-2 py-1 text-xs bg-yellow-900 text-yellow-300 rounded-full">
+              <span className="px-3 py-1 text-xs bg-yellow-900 text-yellow-300 rounded-full">
                 {Math.ceil((new Date(sub.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
               </span>
             </div>
@@ -443,167 +458,211 @@ const ComprehensiveAdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLo
   }
 
   return (
-    <div className="min-h-screen gradient-bg">
-      {/* Header */}
-      <header className="bg-black/20 backdrop-blur-sm border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Film className="w-8 h-8 text-blue-400 mr-3" />
-              <h1 className="text-xl font-bold text-white">SCIFF Admin Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-300">
-                Welcome, <span className="font-medium text-white">{user.username}</span>
+    <div className="h-screen bg-gray-900 flex overflow-hidden">
+      {/* Sidebar */}
+      <div className={`bg-gray-800 border-r border-gray-700 transition-all duration-300 ${
+        sidebarCollapsed ? 'w-16' : 'w-64'
+      } flex flex-col h-full`}>
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            {!sidebarCollapsed && (
+              <div className="flex items-center">
+                <Film className="w-8 h-8 text-blue-400" />
+                <span className="ml-2 text-xl font-bold text-white">SCIFF Admin</span>
+              </div>
+            )}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+            >
+              {sidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation - Scrollable if needed */}
+        <nav className="flex-1 py-4 overflow-y-auto admin-scrollbar">
+          {[
+            { id: 'overview', label: 'Overview', icon: Home, count: undefined },
+            { id: 'schools', label: 'Schools', icon: School, count: schools.length },
+            { id: 'categories', label: 'Categories', icon: Users, count: categories.length },
+            { id: 'films', label: 'Films', icon: Film, count: films.length },
+            { id: 'banners', label: 'Banners', icon: Image, count: banners.length },
+            { id: 'subscriptions', label: 'Subscriptions', icon: Calendar, count: subscriptions.length },
+            { id: 'analytics', label: 'Analytics', icon: BarChart3, count: undefined },
+            { id: 'security', label: 'Security', icon: Shield, count: undefined }
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center px-4 py-3 text-left transition-all duration-200 hover:bg-gray-700 ${
+                activeTab === item.id ? 'bg-blue-600 text-white border-r-4 border-blue-400' : 'text-gray-300'
+              } ${sidebarCollapsed ? 'justify-center' : ''}`}
+              title={sidebarCollapsed ? item.label : ''}
+            >
+              <item.icon className={`w-5 h-5 flex-shrink-0 ${activeTab === item.id ? 'text-white' : 'text-gray-400'}`} />
+              {!sidebarCollapsed && (
+                <>
+                  <span className="ml-3 font-medium">{item.label}</span>
+                  {item.count !== undefined && (
+                    <span className={`ml-auto px-2 py-1 text-xs rounded-full ${
+                      activeTab === item.id ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-300'
+                    }`}>
+                      {item.count}
+                    </span>
+                  )}
+                </>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* User Section - Fixed at bottom */}
+        <div className="border-t border-gray-700 p-4 flex-shrink-0">
+          {!sidebarCollapsed ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
+                    {user.username?.charAt(0).toUpperCase() || 'A'}
+                  </span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-white">{user.username}</p>
+                  <p className="text-xs text-gray-400">Administrator</p>
+                </div>
               </div>
               <button
                 onClick={onLogout}
-                className="btn-secondary text-sm"
+                className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+                title="Logout"
               >
-                Logout
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col space-y-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-white text-sm font-medium">
+                  {user.username?.charAt(0).toUpperCase() || 'A'}
+                </span>
+              </div>
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors mx-auto"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          <TabButton
-            id="overview"
-            label="Overview"
-            icon={<BarChart3 className="w-5 h-5" />}
-          />
-          <TabButton
-            id="schools"
-            label="Schools"
-            icon={<School className="w-5 h-5" />}
-            count={schools.length}
-          />
-          <TabButton
-            id="categories"
-            label="Categories"
-            icon={<Users className="w-5 h-5" />}
-            count={categories.length}
-          />
-          <TabButton
-            id="films"
-            label="Films"
-            icon={<Film className="w-5 h-5" />}
-            count={films.length}
-          />
-          <TabButton
-            id="banners"
-            label="Banners"
-            icon={<Image className="w-5 h-5" />}
-            count={banners.length}
-          />
-          <TabButton
-            id="subscriptions"
-            label="Subscriptions"
-            icon={<Calendar className="w-5 h-5" />}
-            count={subscriptions.length}
-          />
-          <TabButton
-            id="analytics"
-            label="Analytics"
-            icon={<Activity className="w-5 h-5" />}
-          />
-          <TabButton
-            id="security"
-            label="Security"
-            icon={<Shield className="w-5 h-5" />}
-          />
-        </div>
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Top Header - Fixed */}
+        <header className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 px-6 py-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-white capitalize">{activeTab}</h1>
+              <p className="text-gray-400 text-sm">Manage your {activeTab} efficiently</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-300">Welcome, {user.username}</span>
+            </div>
+          </div>
+        </header>
 
-        {/* Tab Content */}
-        {activeTab === 'overview' && <OverviewTab />}
-        {activeTab === 'schools' && (
-          <SchoolsTab 
-            schools={schools}
-            categories={categories}
-            films={films}
-            banners={banners}
-            subscriptions={subscriptions}
-            viewingLogs={viewingLogs}
-            loginActivity={loginActivity}
-            onRefresh={loadDashboardData}
-          />
-        )}
-        {activeTab === 'categories' && (
-          <CategoriesTab 
-            schools={schools}
-            categories={categories}
-            films={films}
-            banners={banners}
-            subscriptions={subscriptions}
-            viewingLogs={viewingLogs}
-            loginActivity={loginActivity}
-            onRefresh={loadDashboardData}
-          />
-        )}
-        {activeTab === 'films' && (
-          <FilmsTab 
-            schools={schools}
-            categories={categories}
-            films={films}
-            banners={banners}
-            subscriptions={subscriptions}
-            viewingLogs={viewingLogs}
-            loginActivity={loginActivity}
-            onRefresh={loadDashboardData}
-          />
-        )}
-        {activeTab === 'banners' && (
-          <BannersTab 
-            schools={schools}
-            categories={categories}
-            films={films}
-            banners={banners}
-            subscriptions={subscriptions}
-            viewingLogs={viewingLogs}
-            loginActivity={loginActivity}
-            onRefresh={loadDashboardData}
-          />
-        )}
-        {activeTab === 'subscriptions' && (
-          <SubscriptionsTab 
-            schools={schools}
-            categories={categories}
-            films={films}
-            banners={banners}
-            subscriptions={subscriptions}
-            viewingLogs={viewingLogs}
-            loginActivity={loginActivity}
-            onRefresh={loadDashboardData}
-          />
-        )}
-        {activeTab === 'analytics' && (
-          <AnalyticsTab 
-            schools={schools}
-            categories={categories}
-            films={films}
-            banners={banners}
-            subscriptions={subscriptions}
-            viewingLogs={viewingLogs}
-            loginActivity={loginActivity}
-            onRefresh={loadDashboardData}
-          />
-        )}
-        {activeTab === 'security' && (
-          <SecurityTab 
-            schools={schools}
-            categories={categories}
-            films={films}
-            banners={banners}
-            subscriptions={subscriptions}
-            viewingLogs={viewingLogs}
-            loginActivity={loginActivity}
-            onRefresh={loadDashboardData}
-          />
-        )}
+        {/* Content Area - Scrollable */}
+        <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden admin-scrollbar">
+          {activeTab === 'overview' && <OverviewTab />}
+          {activeTab === 'schools' && (
+            <SchoolsTab 
+              schools={schools}
+              categories={categories}
+              films={films}
+              banners={banners}
+              subscriptions={subscriptions}
+              viewingLogs={viewingLogs}
+              loginActivity={loginActivity}
+              onRefresh={loadDashboardData}
+            />
+          )}
+          {activeTab === 'categories' && (
+            <CategoriesTab 
+              schools={schools}
+              categories={categories}
+              films={films}
+              banners={banners}
+              subscriptions={subscriptions}
+              viewingLogs={viewingLogs}
+              loginActivity={loginActivity}
+              onRefresh={loadDashboardData}
+            />
+          )}
+          {activeTab === 'films' && (
+            <FilmsTab 
+              schools={schools}
+              categories={categories}
+              films={films}
+              banners={banners}
+              subscriptions={subscriptions}
+              viewingLogs={viewingLogs}
+              loginActivity={loginActivity}
+              onRefresh={loadDashboardData}
+            />
+          )}
+          {activeTab === 'banners' && (
+            <BannersTab 
+              schools={schools}
+              categories={categories}
+              films={films}
+              banners={banners}
+              subscriptions={subscriptions}
+              viewingLogs={viewingLogs}
+              loginActivity={loginActivity}
+              onRefresh={loadDashboardData}
+            />
+          )}
+          {activeTab === 'subscriptions' && (
+            <SubscriptionsTab 
+              schools={schools}
+              categories={categories}
+              films={films}
+              banners={banners}
+              subscriptions={subscriptions}
+              viewingLogs={viewingLogs}
+              loginActivity={loginActivity}
+              onRefresh={loadDashboardData}
+            />
+          )}
+          {activeTab === 'analytics' && (
+            <AnalyticsTab 
+              schools={schools}
+              categories={categories}
+              films={films}
+              banners={banners}
+              subscriptions={subscriptions}
+              viewingLogs={viewingLogs}
+              loginActivity={loginActivity}
+              onRefresh={loadDashboardData}
+            />
+          )}
+          {activeTab === 'security' && (
+            <SecurityTab 
+              schools={schools}
+              categories={categories}
+              films={films}
+              banners={banners}
+              subscriptions={subscriptions}
+              viewingLogs={viewingLogs}
+              loginActivity={loginActivity}
+              onRefresh={loadDashboardData}
+            />
+          )}
+        </main>
       </div>
     </div>
   );

@@ -54,6 +54,31 @@ body {
   background: #0f4c75;
 }
 
+/* Admin dashboard specific scrollbars */
+.admin-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Firefox scrollbar */
+.admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #374151;
+}
+
 /* Custom component classes */
 @layer components {
   .btn-primary {
@@ -94,34 +119,6 @@ body {
   
   .shadow-glow {
     @apply shadow-lg shadow-blue-500/25;
-  }
-
-  .netflix-hero {
-    @apply relative h-screen w-full overflow-hidden;
-  }
-
-  .netflix-hero-bg {
-    @apply absolute inset-0 w-full h-full object-cover;
-  }
-
-  .netflix-hero-gradient {
-    @apply absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent;
-  }
-
-  .netflix-hero-content {
-    @apply relative z-10 h-full flex flex-col justify-center px-4 lg:px-16;
-  }
-
-  .netflix-row {
-    @apply relative group;
-  }
-
-  .netflix-card {
-    @apply relative flex-shrink-0 cursor-pointer transform hover:scale-105 transition-all duration-300;
-  }
-
-  .netflix-card-hover {
-    @apply absolute bg-gray-900 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-20 transform scale-0 group-hover:scale-100;
   }
 }
 

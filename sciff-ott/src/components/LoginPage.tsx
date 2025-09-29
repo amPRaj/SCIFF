@@ -66,7 +66,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-full shadow-glow">
+            <div className="bg-yellow-600 p-3 rounded-full shadow-glow">
               <Film className="w-8 h-8 text-white" />
             </div>
           </div>
